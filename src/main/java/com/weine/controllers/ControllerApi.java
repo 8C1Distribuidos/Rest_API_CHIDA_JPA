@@ -1,6 +1,7 @@
 package com.weine.controllers;
 
 import com.weine.services.IServiceApi;
+import com.weine.tools.Formatter;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -47,6 +48,7 @@ import java.util.List;
  */
 public abstract class ControllerApi<D,C, S extends IServiceApi<D,C>> extends HttpServlet {
     protected IServiceApi<D,C> service;
+    protected Class<D> objectClass;
 
     public static String getBody(HttpServletRequest request) throws IOException {
 
@@ -87,11 +89,10 @@ public abstract class ControllerApi<D,C, S extends IServiceApi<D,C>> extends Htt
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         System.out.println("Obtaining All "+ getEntityPluralName()+ "...");
         List<D> response = this.service.getObjects();
-        for (D object: response) {
-            resp.getWriter().write(object.toString());
-        }
+        resp.getWriter().write( Formatter.serializergson.toJson(response));
         resp.setStatus(200);
         System.out.println( getEntityPluralName()+ " obtained...");
     }
@@ -103,27 +104,28 @@ public abstract class ControllerApi<D,C, S extends IServiceApi<D,C>> extends Htt
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         String string = getBody(req);
+        D requestObject = Formatter.getObject(string, objectClass);
         System.out.println("Save " + getEntityName() + "" + string + "...");
         System.out.println(getEntityName() + " saved...");
         resp.getWriter().write(string);
-        /*
         try{
             D response = this.service.save(requestObject);
             if(response == null)
             {
-                logger.warn(getEntityName() + " " + requestObject + " has not been saved");
-                throw new ApiRequestException("Invalid fields", HttpStatus.BAD_REQUEST);
+                System.out.println(getEntityName() + " " + requestObject + " has not been saved");
+                resp.sendError(404, "Invalid fields");
+                return;
             }
-            logger.info(getEntityName() + " " + response + " saved...");
-            return ResponseEntity.ok(response);
+            System.out.println(getEntityName() + " " + response + " saved...");
+            resp.setStatus(200);
         }catch (RuntimeException e)
         {
-            logger.error(e.getMessage());
-            logger.warn(getEntityName() + " " + requestObject + " has not been saved");
-            throw new ApiRequestException("Invalid fields", HttpStatus.BAD_REQUEST);
+            System.out.println(e.getMessage());
+            System.out.println(getEntityName() + " " + requestObject + " has not been saved");
+            resp.sendError(404, "Invalid fields");
         }
-         */
     }
 
     @Override

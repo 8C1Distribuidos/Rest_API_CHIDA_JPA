@@ -10,6 +10,7 @@ import java.io.IOException;
 
 public abstract class FindControllerApi <D,C, S extends IServiceApi<D,C>> extends HttpServlet {
     protected IServiceApi<D,C> service;
+    protected Class<D> objectClass;
     /**
      * To get a individual item
      */

@@ -12,6 +12,7 @@ public class CityServlet extends ControllerApi<CityDto, Object, CityService> {
     @Override
     public void init() throws ServletException {
         service = new CityService();
+        objectClass = CityDto.class;
     }
 
     @Override
